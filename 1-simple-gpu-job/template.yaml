@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: simple-gpu-job
+spec:      
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: simple-gpu-job
+        image: wbuchwalter/k8s-ml-demo:simple-gpu-job
+        imagePullPolicy: Always        
+        command:
+          - python
+          - /app/main.py
+        resources:
+          requests:
+            alpha.kubernetes.io/nvidia-gpu: 1 
+          limits:
+            alpha.kubernetes.io/nvidia-gpu: 1 
+        env:
+        - name: LD_LIBRARY_PATH
+          value: /usr/lib/nvidia:/usr/lib/x86_64-linux-gnu
+        volumeMounts:
+        - mountPath: /usr/local/nvidia/bin
+          name: bin
+        - mountPath: /usr/lib/nvidia
+          name: lib
+        - mountPath: /usr/lib/x86_64-linux-gnu/libcuda.so.1
+          name: libcuda
+      volumes:
+        - name: bin
+          hostPath: 
+            path: /usr/lib/nvidia-378/bin
+        - name: lib
+          hostPath: 
+            path: /usr/lib/nvidia-378
+        - name: libcuda
+          hostPath:
+            path: /usr/lib/x86_64-linux-gnu/libcuda.so.1 

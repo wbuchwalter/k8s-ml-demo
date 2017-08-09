@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  # We give the pod a random name so that we can run helm test multiple times and not
+  # have issues because the pod already exists.
+  name: "{{.Release.Name}}-tfjob-test-{{randAlphaNum 6 | lower }}"
+  annotations:
+    # See https://github.com/kubernetes/helm/blob/master/docs/chart_tests.md
+    "helm.sh/hook": test-success
+spec:
+  containers:
+    - name: basic-test
+      image: gcr.io/tf-on-k8s-dogfood/tf_operator:latest
+      command:
+        - /opt/mlkube/test/e2e
+        - -alsologtostderr
+        - -v=1
+  restartPolicy: Never

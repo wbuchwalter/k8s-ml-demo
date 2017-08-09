@@ -1,0 +1,18 @@
+apiVersion: mlkube.io/v1beta1
+kind: "TfJob"
+metadata:
+  name: simple-tf-job
+spec:
+  replicaSpecs:
+    - replicas: 1
+      tfPort: 2222
+      tfReplicaType: MASTER
+      template:
+        spec:
+          containers:
+            - image: wbuchwalter/k8s-ml-demo:simple-gpu-job
+              name: tensorflow
+              resources:
+                limits:
+                  alpha.kubernetes.io/nvidia-gpu: 1
+          restartPolicy: OnFailure
