@@ -12,6 +12,9 @@ spec:
           containers:
             - image: wbuchwalter/k8s-ml-demo:simple-gpu-job
               name: tensorflow
+              command:
+                - python
+                - /app/main.py
               resources:
                 limits:
                   alpha.kubernetes.io/nvidia-gpu: 1

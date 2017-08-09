@@ -1,0 +1,72 @@
+apiVersion: "mlkube.io/v1beta1"
+kind: "TfJob"
+metadata:
+  name: distributed-tf
+spec:
+  replicaSpecs:
+    - replicas: 1
+      tfPort: 2222
+      tfReplicaType: MASTER
+      template:
+        spec:
+          containers:
+            - image: wbuchwalter/distributed-tfjob
+              name: tensorflow
+              command:
+                - python
+                - main.py
+                - --logdir 
+                - /tmp/tensorflow/distributed-tf
+              resources:
+                    limits:
+                      alpha.kubernetes.io/nvidia-gpu: 1
+              volumeMounts:
+                - mountPath: /tmp/tensorflow
+                  name: azurefile
+          restartPolicy: OnFailure
+          volumes:
+            - name: azurefile
+              azureFile:
+                  secretName: azure-secret
+                  shareName: data
+                  readOnly: false
+    - replicas: 2
+      tfPort: 2222
+      tfReplicaType: WORKER
+      template:
+        spec:
+          containers:
+            - image: wbuchwalter/distributed-tfjob
+              name: tensorflow
+              command:
+                - python
+                - main.py
+              resources:
+                    limits:
+                      alpha.kubernetes.io/nvidia-gpu: 1
+          restartPolicy: OnFailure
+          
+    - replicas: 2
+      tfPort: 2222
+      tfReplicaType: PS
+      template:
+        spec:
+          containers:
+            - image: wbuchwalter/distributed-tfjob:cpu
+              name: tensorflow
+              command:
+                - python
+                - main.py
+          restartPolicy: OnFailure
+  tensorboard:
+    logDir: /tmp/tensorflow/distributed-tf
+    serviceType: LoadBalancer
+    volumes:
+      - name: azurefile
+        azureFile:
+            secretName: azure-secret
+            shareName: data
+            readOnly: false
+    volumeMounts:
+      - mountPath: /tmp/tensorflow
+        name: azurefile
